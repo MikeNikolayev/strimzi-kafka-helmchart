@@ -25,3 +25,7 @@ To use this project, ensure you have the following:
    ```bash
    git clone https://github.com/your-username/strimzi-kafka-helmchart.git
    cd strimzi-kafka-helmchart
+
+2.Install the Chart:
+  ```bash
+  helm install my-kafka-cluster my-strimzi-kafka/strimzi-kafka-helmchart

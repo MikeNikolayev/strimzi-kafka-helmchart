@@ -1,0 +1,58 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: {{ $.Values.cluster.name }}
+  annotations:
+    strimzi.io/node-pools: enabled
+    strimzi.io/kraft: enabled
+spec:
+  kafka:
+    version: "{{ $.Values.kafka.version }}"
+    metadataVersion: "{{ $.Values.kafka.metadataVersion }}"
+    listeners:
+{{ toYaml $.Values.kafka.listeners | indent 6 }}
+    config:
+{{ toYaml $.Values.kafka.config | indent 6 }}
+    resources:
+{{ toYaml $.Values.kafka.resources | indent 6 }}
+    jvmOptions:
+{{ toYaml $.Values.kafka.jvmOptions | indent 6 }}
+    template:
+{{ toYaml $.Values.kafka.template | indent 6 }}
+    {{- if $.Values.kafka.metrics.enabled }}
+    metricsConfig:
+      type: jmxPrometheusExporter
+      valueFrom:
+        configMapKeyRef:
+          name: {{ $.Values.kafka.metrics.configMapName }}
+          key: {{ $.Values.kafka.metrics.configMapKey }}
+    {{- end }}
+  entityOperator:
+    {{- if $.Values.entityOperator.topicOperator.enabled }}
+    topicOperator: {}
+    {{- else }}
+    topicOperator: null
+    {{- end }}
+    {{- if $.Values.entityOperator.userOperator.enabled }}
+    userOperator: {}
+    {{- else }}
+    userOperator: null
+    {{- end }}
+  {{- if and (ge (int $.Values.nodepools.brokers.replicas) 2) $.Values.cruiseControl.enabled }}
+  cruiseControl:
+    {{- if $.Values.cruiseControl.metrics.enabled }}
+    metricsConfig:
+      type: jmxPrometheusExporter
+      valueFrom:
+        configMapKeyRef:
+          name: {{ $.Values.cruiseControl.metrics.configMapName }}
+          key: {{ $.Values.cruiseControl.metrics.configMapKey }}
+    {{- end }}
+    autoRebalance:
+      - mode: add-brokers
+        template:
+          name: {{ $.Values.cruiseControl.autoRebalance.addBrokersTemplate }}
+      - mode: remove-brokers
+        template:
+          name: {{ $.Values.cruiseControl.autoRebalance.removeBrokersTemplate }}
+  {{- end }}

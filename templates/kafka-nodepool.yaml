@@ -1,0 +1,21 @@
+{{- range $key, $pool := .Values.nodepools }}
+{{- if $key }}
+---
+{{- end }}
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+  name: {{ $pool.name }}
+  labels:
+    strimzi.io/cluster: {{ $.Values.cluster.name }}
+spec:
+  replicas: {{ $pool.replicas }}
+  roles:
+{{ toYaml $pool.roles | indent 4 }}
+  storage:
+    type: {{ $pool.storage.type }}
+    volumes:
+{{ toYaml $pool.storage.volumes | indent 6 }}
+  resources:
+{{ toYaml $pool.resources | indent 4 }}
+{{- end }}

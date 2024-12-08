@@ -1,0 +1,46 @@
+{{- if .Values.mirrorMaker.enabled }}
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaMirrorMaker2
+metadata:
+  name: {{ .Values.mirrorMaker.name }}
+spec:
+  version: {{ .Values.mirrorMaker.version }}
+  replicas: {{ .Values.mirrorMaker.replicas }}
+  connectCluster: "{{ .Values.mirrorMaker.connectCluster }}"
+  clusters:
+    {{- range .Values.mirrorMaker.clusters }}
+    - alias: "{{ .alias }}"
+      bootstrapServers: "{{ .bootstrapServers }}"
+      {{- if .config }}
+      config:
+        {{- range $key, $value := .config }}
+        {{ $key }}: {{ $value | quote }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  mirrors:
+    {{- range .Values.mirrorMaker.mirrors }}
+    - sourceCluster: "{{ .sourceCluster }}"
+      targetCluster: "{{ .targetCluster }}"
+      sourceConnector:
+        tasksMax: {{ .sourceConnector.tasksMax }}
+        config:
+          {{- range $key, $value := .sourceConnector.config }}
+          {{ $key }}: {{ $value | quote }}
+          {{- end }}
+      checkpointConnector:
+        tasksMax: {{ .checkpointConnector.tasksMax }}
+        config:
+          {{- range $key, $value := .checkpointConnector.config }}
+          {{ $key }}: {{ $value | quote }}
+          {{- end }}
+      topicsPattern: "{{ .topicsPattern }}"
+      groupsPattern: "{{ .groupsPattern }}"
+    {{- end }}
+  metricsConfig:
+    type: {{ .Values.mirrorMaker.metricsConfig.type }}
+    valueFrom:
+      configMapKeyRef:
+        name: {{ .Values.mirrorMaker.metricsConfig.configMapName }}
+        key: {{ .Values.mirrorMaker.metricsConfig.configMapKey }}
+{{- end }}
